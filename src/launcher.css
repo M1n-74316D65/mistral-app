@@ -5,28 +5,32 @@
 }
 
 :root {
-  --bg-color: rgba(255, 255, 255, 0.95);
-  --border-color: rgba(0, 0, 0, 0.1);
-  --text-color: #1a1a1a;
-  --placeholder-color: #9ca3af;
-  --input-bg: transparent;
-  --submit-bg: #f3f4f6;
-  --submit-hover-bg: #e5e7eb;
-  --submit-color: #374151;
-  --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  /* Light mode */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --text-primary: #1a1a1a;
+  --text-secondary: #71717a;
+  --accent: #ff6b35;
+  --accent-subtle: rgba(255, 107, 53, 0.1);
+  --submit-bg: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  --submit-hover: linear-gradient(135deg, #ff5722 0%, #ff8c00 100%);
+  --submit-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+  --divider: rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: rgba(30, 30, 30, 0.95);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --text-color: #f5f5f5;
-    --placeholder-color: #6b7280;
-    --input-bg: transparent;
-    --submit-bg: #374151;
-    --submit-hover-bg: #4b5563;
-    --submit-color: #f3f4f6;
-    --shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    /* Dark mode */
+    --bg-primary: #1c1c1e;
+    --bg-secondary: #2c2c2e;
+    --text-primary: #f5f5f7;
+    --text-secondary: #8e8e93;
+    --accent: #ff6b35;
+    --accent-subtle: rgba(255, 107, 53, 0.15);
+    --submit-bg: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    --submit-hover: linear-gradient(135deg, #ff5722 0%, #ff8c00 100%);
+    --submit-shadow: 0 2px 12px rgba(255, 107, 53, 0.4);
+    --divider: rgba(255, 255, 255, 0.08);
   }
 }
 
@@ -34,123 +38,146 @@ html, body {
   height: 100%;
   width: 100%;
   overflow: hidden;
-  background: transparent;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
 }
 
 .launcher-container {
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 660px;
-  height: 60px;
-  background: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
+  height: 100%;
   padding: 0 16px;
-  gap: 12px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: all 0.2s ease;
+  gap: 14px;
+  background: var(--bg-primary);
 }
 
-.launcher-container:focus-within {
-  border-color: #FB923C;
-  box-shadow: var(--shadow), 0 0 0 2px rgba(251, 146, 60, 0.2);
-}
-
+/* Logo section with subtle background */
 .launcher-logo {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
+  background: var(--accent-subtle);
+  border-radius: 10px;
+  transition: transform 0.2s ease;
+}
+
+.launcher-logo:hover {
+  transform: scale(1.05);
 }
 
 .launcher-logo svg {
-  width: 32px;
+  width: 26px;
   height: auto;
 }
 
+/* Divider line */
+.launcher-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--divider);
+  flex-shrink: 0;
+}
+
+/* Input section */
 .launcher-input-wrapper {
   flex: 1;
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .launcher-input {
   width: 100%;
-  height: 100%;
   border: none;
   outline: none;
-  background: var(--input-bg);
-  color: var(--text-color);
+  background: transparent;
+  color: var(--text-primary);
   font-size: 16px;
   font-weight: 400;
-  line-height: 1.5;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
 }
 
 .launcher-input::placeholder {
-  color: var(--placeholder-color);
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .launcher-input:focus {
   outline: none;
 }
 
+/* Keyboard shortcut hint */
+.launcher-hint {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.launcher-hint kbd {
+  font-family: inherit;
+  font-size: 11px;
+}
+
+/* Submit button with gradient */
 .launcher-submit {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   border: none;
   border-radius: 10px;
   background: var(--submit-bg);
-  color: var(--submit-color);
+  color: white;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
+  box-shadow: var(--submit-shadow);
 }
 
 .launcher-submit:hover {
-  background: var(--submit-hover-bg);
+  background: var(--submit-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
 }
 
 .launcher-submit:active {
-  transform: scale(0.95);
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 1px 4px rgba(255, 107, 53, 0.3);
 }
 
 .launcher-submit:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .launcher-submit svg {
-  transform: rotate(0deg);
-}
-
-/* Animation for showing the launcher */
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.launcher-container {
-  animation: slideIn 0.15s ease-out;
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
 }

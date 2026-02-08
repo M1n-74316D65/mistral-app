@@ -6,7 +6,7 @@ use tauri::{
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
-// JavaScript to inject message into Mistral's chat input
+// JavaScript to inject message into Mistral's chat input with retry logic
 fn get_inject_message_js(message: &str) -> String {
     let escaped_message = message
         .replace('\\', "\\\\")
@@ -18,54 +18,92 @@ fn get_inject_message_js(message: &str) -> String {
     format!(r#"
         (function() {{
             const message = `{}`;
+            const maxRetries = 10;
+            const retryDelay = 300;
+            let retryCount = 0;
             
-            // Find the textarea
-            const textarea = document.querySelector('textarea[placeholder="Ask Le Chat"]') 
-                || document.querySelector('textarea');
-            
-            if (!textarea) {{
-                console.error('Could not find textarea');
-                return false;
+            function injectMessage() {{
+                // Try multiple selectors for the textarea
+                const textarea = document.querySelector('textarea[placeholder*="Ask"]')
+                    || document.querySelector('textarea[placeholder*="Message"]')
+                    || document.querySelector('textarea[data-testid]')
+                    || document.querySelector('div[contenteditable="true"]')
+                    || document.querySelector('textarea');
+                
+                if (!textarea) {{
+                    retryCount++;
+                    if (retryCount < maxRetries) {{
+                        console.log('[Le Chat] Waiting for textarea... attempt', retryCount);
+                        setTimeout(injectMessage, retryDelay);
+                        return;
+                    }}
+                    console.error('[Le Chat] Could not find textarea after', maxRetries, 'attempts');
+                    return false;
+                }}
+                
+                console.log('[Le Chat] Found textarea:', textarea);
+                
+                // Handle contenteditable div (common in modern chat UIs)
+                if (textarea.contentEditable === 'true') {{
+                    textarea.innerHTML = message;
+                    textarea.focus();
+                    textarea.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                    setTimeout(submitForm, 200);
+                    return true;
+                }}
+                
+                // Use native setter to properly update React state
+                const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                    window.HTMLTextAreaElement.prototype, 
+                    'value'
+                ).set;
+                
+                nativeInputValueSetter.call(textarea, message);
+                
+                // Dispatch events to notify React
+                textarea.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                textarea.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                
+                // Focus the textarea
+                textarea.focus();
+                
+                // Submit after input is set
+                setTimeout(submitForm, 200);
+                return true;
             }}
             
-            // Use native setter to properly update React state
-            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-                window.HTMLTextAreaElement.prototype, 
-                'value'
-            ).set;
-            
-            nativeInputValueSetter.call(textarea, message);
-            
-            // Dispatch events to notify React
-            textarea.dispatchEvent(new Event('input', {{ bubbles: true }}));
-            textarea.dispatchEvent(new Event('change', {{ bubbles: true }}));
-            
-            // Focus the textarea
-            textarea.focus();
-            
-            // Try to click send button after a short delay
-            setTimeout(() => {{
+            function submitForm() {{
                 // Look for send button - try multiple selectors
                 const sendBtn = document.querySelector('button[type="submit"]')
                     || document.querySelector('button[aria-label*="send" i]')
                     || document.querySelector('button[aria-label*="Send" i]')
-                    || document.querySelector('form button:last-of-type');
+                    || document.querySelector('button[data-testid*="send" i]')
+                    || document.querySelector('form button:last-of-type')
+                    || document.querySelector('button svg[class*="send" i]')?.closest('button');
                 
                 if (sendBtn && !sendBtn.disabled) {{
+                    console.log('[Le Chat] Clicking send button');
                     sendBtn.click();
                 }} else {{
                     // If no button found, try pressing Enter
-                    textarea.dispatchEvent(new KeyboardEvent('keydown', {{
-                        key: 'Enter',
-                        code: 'Enter',
-                        keyCode: 13,
-                        which: 13,
-                        bubbles: true
-                    }}));
+                    console.log('[Le Chat] No send button, trying Enter key');
+                    const textarea = document.querySelector('textarea') 
+                        || document.querySelector('div[contenteditable="true"]');
+                    if (textarea) {{
+                        textarea.dispatchEvent(new KeyboardEvent('keydown', {{
+                            key: 'Enter',
+                            code: 'Enter',
+                            keyCode: 13,
+                            which: 13,
+                            bubbles: true,
+                            cancelable: true
+                        }}));
+                    }}
                 }}
-            }}, 150);
+            }}
             
-            return true;
+            // Start the injection process
+            injectMessage();
         }})();
     "#, escaped_message)
 }
@@ -125,6 +163,9 @@ async fn submit_message(app: AppHandle, message: String) -> Result<(), String> {
     if let Some(main_window) = app.get_webview_window("main") {
         main_window.show().map_err(|e| e.to_string())?;
         main_window.set_focus().map_err(|e| e.to_string())?;
+        
+        // Wait a bit for the window to be ready and page to be interactive
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
         
         // Inject the message
         let js = get_inject_message_js(&message);

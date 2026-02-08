@@ -8,10 +8,6 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "trayIcon": {
-      "iconPath": "icons/icon.png",
-      "iconAsTemplate": true
-    },
     "windows": [
       {
         "label": "main",
@@ -31,16 +27,16 @@
         "label": "launcher",
         "title": "Le Chat Launcher",
         "url": "launcher.html",
-        "width": 680,
-        "height": 80,
+        "width": 660,
+        "height": 64,
         "resizable": false,
         "visible": false,
         "center": true,
         "decorations": false,
-        "transparent": true,
+        "transparent": false,
         "alwaysOnTop": true,
         "skipTaskbar": true,
-        "shadow": false
+        "shadow": true
       }
     ],
     "security": {
