@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a"/>
+      <stop offset="100%" style="stop-color:#0a0a0a"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect x="0" y="0" width="512" height="512" rx="96" ry="96" fill="url(#bg-gradient)"/>
+  
+  <!-- Mistral Logo - scaled and centered -->
+  <g transform="translate(100, 140) scale(1.47)">
+    <rect fill="#FCD34D" x="30.303" y="0" width="30.303" height="30.303"/>
+    <rect fill="#FCD34D" x="151.515" y="0" width="30.303" height="30.303"/>
+    <rect fill="#FBBF24" x="30.303" y="30.303" width="60.606" height="30.303"/>
+    <rect fill="#FBBF24" x="121.212" y="30.303" width="60.606" height="30.303"/>
+    <rect fill="#FB923C" x="30.303" y="60.606" width="151.515" height="30.303"/>
+    <rect fill="#F97316" x="30.303" y="90.909" width="30.303" height="30.303"/>
+    <rect fill="#F97316" x="90.909" y="90.909" width="30.303" height="30.303"/>
+    <rect fill="#F97316" x="151.515" y="90.909" width="30.303" height="30.303"/>
+    <rect fill="#DC2626" x="0" y="121.212" width="90.909" height="30.303"/>
+    <rect fill="#DC2626" x="121.212" y="121.212" width="90.909" height="30.303"/>
+  </g>
+</svg>

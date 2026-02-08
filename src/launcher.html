@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Le Chat Launcher</title>
+  <link rel="stylesheet" href="launcher.css">
+</head>
+<body>
+  <div class="launcher-container">
+    <div class="launcher-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212.121 151.515" width="40" height="28">
+        <defs>
+          <linearGradient id="mistral-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#FCD34D"/>
+            <stop offset="40%" style="stop-color:#FB923C"/>
+            <stop offset="100%" style="stop-color:#B91C1C"/>
+          </linearGradient>
+        </defs>
+        <rect fill="#FCD34D" x="30.303" y="0" width="30.303" height="30.303"/>
+        <rect fill="#FCD34D" x="151.515" y="0" width="30.303" height="30.303"/>
+        <rect fill="#FBBF24" x="30.303" y="30.303" width="60.606" height="30.303"/>
+        <rect fill="#FBBF24" x="121.212" y="30.303" width="60.606" height="30.303"/>
+        <rect fill="#FB923C" x="30.303" y="60.606" width="151.515" height="30.303"/>
+        <rect fill="#F97316" x="30.303" y="90.909" width="30.303" height="30.303"/>
+        <rect fill="#F97316" x="90.909" y="90.909" width="30.303" height="30.303"/>
+        <rect fill="#F97316" x="151.515" y="90.909" width="30.303" height="30.303"/>
+        <rect fill="#B91C1C" x="0" y="121.212" width="90.909" height="30.303"/>
+        <rect fill="#B91C1C" x="121.212" y="121.212" width="90.909" height="30.303"/>
+      </svg>
+    </div>
+    <div class="launcher-input-wrapper">
+      <input 
+        type="text" 
+        id="launcher-input" 
+        class="launcher-input" 
+        placeholder="Ask Le Chat..."
+        autofocus
+        autocomplete="off"
+        spellcheck="false"
+      />
+    </div>
+    <button type="button" id="submit-btn" class="launcher-submit" aria-label="Send message">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m5 12 7-7 7 7"/>
+        <path d="M12 19V5"/>
+      </svg>
+    </button>
+  </div>
+  <script type="module" src="launcher.js"></script>
+</body>
+</html>

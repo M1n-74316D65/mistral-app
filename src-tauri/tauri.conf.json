@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Le Chat",
+  "version": "1.0.0",
+  "identifier": "ai.mistral.lechat",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "Le Chat",
+        "url": "https://chat.mistral.ai/chat",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "visible": false,
+        "center": true,
+        "decorations": true,
+        "transparent": false
+      },
+      {
+        "label": "launcher",
+        "title": "Le Chat Launcher",
+        "url": "launcher.html",
+        "width": 680,
+        "height": 80,
+        "resizable": false,
+        "visible": false,
+        "center": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://chat.mistral.ai https://*.mistral.ai; style-src 'self' 'unsafe-inline' https://chat.mistral.ai https://*.mistral.ai; connect-src 'self' https://chat.mistral.ai https://*.mistral.ai wss://*.mistral.ai https://*.posthog.com https://*.sentry.io; img-src 'self' data: blob: https: http:; font-src 'self' data: https:; frame-src https://chat.mistral.ai https://*.mistral.ai; child-src https://chat.mistral.ai https://*.mistral.ai;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Mistral AI Chat Desktop App",
+    "longDescription": "A desktop wrapper for Le Chat - Mistral AI's conversational assistant. Features a quick launcher accessible via Alt+Space (Windows) or Option+Space (macOS).",
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "exceptionDomain": "chat.mistral.ai"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
+  }
+}

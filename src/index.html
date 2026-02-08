@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Le Chat</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { 
+      height: 100%; 
+      width: 100%;
+      overflow: hidden;
+      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      html, body { background: #1a1a1a; color: #f5f5f5; }
+    }
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 20px;
+    }
+    .loading svg {
+      width: 80px;
+      height: auto;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .loading p {
+      color: #666;
+      font-size: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .loading p { color: #999; }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212.121 151.515">
+      <rect fill="#FCD34D" x="30.303" y="0" width="30.303" height="30.303"/>
+      <rect fill="#FCD34D" x="151.515" y="0" width="30.303" height="30.303"/>
+      <rect fill="#FBBF24" x="30.303" y="30.303" width="60.606" height="30.303"/>
+      <rect fill="#FBBF24" x="121.212" y="30.303" width="60.606" height="30.303"/>
+      <rect fill="#FB923C" x="30.303" y="60.606" width="151.515" height="30.303"/>
+      <rect fill="#F97316" x="30.303" y="90.909" width="30.303" height="30.303"/>
+      <rect fill="#F97316" x="90.909" y="90.909" width="30.303" height="30.303"/>
+      <rect fill="#F97316" x="151.515" y="90.909" width="30.303" height="30.303"/>
+      <rect fill="#B91C1C" x="0" y="121.212" width="90.909" height="30.303"/>
+      <rect fill="#B91C1C" x="121.212" y="121.212" width="90.909" height="30.303"/>
+    </svg>
+    <p>Loading Le Chat...</p>
+  </div>
+</body>
+</html>
