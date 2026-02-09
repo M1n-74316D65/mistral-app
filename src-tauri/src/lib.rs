@@ -6,6 +6,14 @@ use tauri::{
 };
 #[cfg(target_os = "macos")]
 use tauri::TitleBarStyle;
+#[cfg(target_os = "macos")]
+#[allow(deprecated)]
+use cocoa::appkit::{NSColor, NSWindow};
+#[cfg(target_os = "macos")]
+#[allow(deprecated)]
+use cocoa::base::{id, nil, NO};
+#[cfg(target_os = "macos")]
+use objc::{msg_send, sel, sel_impl};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
 // JavaScript to inject custom styles that hide UI elements overlapping with title bar
@@ -589,6 +597,33 @@ pub fn run() {
                         }
                     }
                 });
+            }
+            
+// Make launcher window fully transparent on macOS for rounded corners
+            #[cfg(target_os = "macos")]
+            #[allow(deprecated, unexpected_cfgs)]
+            {
+                if let Some(launcher) = app.get_webview_window("launcher") {
+                    if let Ok(ns_window) = launcher.ns_window() {
+                        let ns_window = ns_window as id;
+                        unsafe {
+                            // Set window background to clear
+                            let clear_color = NSColor::clearColor(nil);
+                            ns_window.setBackgroundColor_(clear_color);
+                            
+                            // Disable WKWebView background drawing via private API
+                            let content_view: id = msg_send![ns_window, contentView];
+                            if !content_view.is_null() {
+                                let subviews: id = msg_send![content_view, subviews];
+                                let count: usize = msg_send![subviews, count];
+                                for i in 0..count {
+                                    let subview: id = msg_send![subviews, objectAtIndex:i];
+                                    let _: () = msg_send![subview, _setDrawsBackground:NO];
+                                }
+                            }
+                        }
+                    }
+                }
             }
             
             // Platform-specific window configuration and style injection
