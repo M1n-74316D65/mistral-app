@@ -11,40 +11,123 @@
       width: 100%;
       overflow: hidden;
       background: #f5f5f5;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     @media (prefers-color-scheme: dark) {
       html, body { background: #1a1a1a; color: #f5f5f5; }
     }
-    .loading {
+    .container {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100%;
-      gap: 20px;
+      gap: 24px;
+      padding: 40px;
     }
-    .loading svg {
+    .logo {
       width: 80px;
       height: auto;
+    }
+    
+    /* Loading state */
+    .container.loading .logo {
       animation: pulse 2s ease-in-out infinite;
     }
-    .loading p {
+    .container.loading .status-text { display: block; }
+    .container.loading .offline-content { display: none; }
+    
+    /* Offline state */
+    .container.offline .logo {
+      animation: none;
+      opacity: 0.5;
+    }
+    .container.offline .status-text { display: none; }
+    .container.offline .offline-content { display: flex; }
+    
+    .status-text {
       color: #666;
       font-size: 14px;
+      display: none;
     }
     @media (prefers-color-scheme: dark) {
-      .loading p { color: #999; }
+      .status-text { color: #999; }
     }
+    
+    .offline-content {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .offline-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+    .offline-message {
+      font-size: 14px;
+      color: #71717a;
+      max-width: 360px;
+      line-height: 1.5;
+    }
+    @media (prefers-color-scheme: dark) {
+      .offline-title { color: #f5f5f7; }
+      .offline-message { color: #8e8e93; }
+    }
+    
+    .retry-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+      margin-top: 8px;
+    }
+    .retry-btn:hover {
+      background: linear-gradient(135deg, #ff5722 0%, #ff8c00 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+    }
+    .retry-btn:active {
+      transform: translateY(0) scale(0.98);
+    }
+    .retry-btn:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+    .retry-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    .retry-btn.retrying svg {
+      animation: spin 1s linear infinite;
+    }
+    
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-  <div class="loading">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212.121 151.515">
+  <div class="container loading" id="main-container">
+    <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212.121 151.515">
       <rect fill="#FCD34D" x="30.303" y="0" width="30.303" height="30.303"/>
       <rect fill="#FCD34D" x="151.515" y="0" width="30.303" height="30.303"/>
       <rect fill="#FBBF24" x="30.303" y="30.303" width="60.606" height="30.303"/>
@@ -56,7 +139,56 @@
       <rect fill="#B91C1C" x="0" y="121.212" width="90.909" height="30.303"/>
       <rect fill="#B91C1C" x="121.212" y="121.212" width="90.909" height="30.303"/>
     </svg>
-    <p>Loading Le Chat...</p>
+    <p class="status-text">Loading Le Chat...</p>
+    <div class="offline-content">
+      <h2 class="offline-title">Unable to connect</h2>
+      <p class="offline-message">
+        Could not reach chat.mistral.ai. Check your internet connection and try again.
+      </p>
+      <button class="retry-btn" id="retry-btn" onclick="retryConnection()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+          <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+          <path d="M16 21h5v-5"/>
+        </svg>
+        Retry
+      </button>
+    </div>
   </div>
+  <script>
+    const CHAT_URL = 'https://chat.mistral.ai/chat';
+    
+    function retryConnection() {
+      const btn = document.getElementById('retry-btn');
+      const container = document.getElementById('main-container');
+      
+      btn.disabled = true;
+      btn.classList.add('retrying');
+      container.className = 'container loading';
+      
+      // Try navigating to the chat URL
+      if (window.__TAURI__) {
+        window.__TAURI__.core.invoke('navigate_to_chat').catch(() => {
+          // If the command fails, try direct navigation
+          window.location.href = CHAT_URL;
+        });
+      } else {
+        window.location.href = CHAT_URL;
+      }
+      
+      // Reset button after a delay in case navigation doesn't work
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.classList.remove('retrying');
+        container.className = 'container offline';
+      }, 5000);
+    }
+    
+    // Auto-retry on coming back online
+    window.addEventListener('online', () => {
+      retryConnection();
+    });
+  </script>
 </body>
 </html>

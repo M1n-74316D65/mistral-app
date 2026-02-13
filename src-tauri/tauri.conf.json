@@ -28,7 +28,7 @@
         "title": "Le Chat Launcher",
         "url": "launcher.html",
         "width": 660,
-        "height": 64,
+        "height": 88,
         "resizable": false,
         "visible": false,
         "center": true,
@@ -37,6 +37,18 @@
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "shadow": false
+      },
+      {
+        "label": "settings",
+        "title": "Le Chat Settings",
+        "url": "settings.html",
+        "width": 520,
+        "height": 460,
+        "resizable": false,
+        "visible": false,
+        "center": true,
+        "decorations": true,
+        "transparent": false
       }
     ],
     "security": {

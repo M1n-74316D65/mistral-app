@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Le Chat Settings</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="settings-container">
+    <h1 class="settings-title">Settings</h1>
+
+    <section class="settings-section">
+      <h2 class="section-title">General</h2>
+      
+      <div class="setting-row">
+        <div class="setting-info">
+          <label for="new-chat-default">New chat by default</label>
+          <p class="setting-description">Launcher starts a new conversation when submitting</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="new-chat-default" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h2 class="section-title">Notifications</h2>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <label for="notifications-enabled">Response notifications</label>
+          <p class="setting-description">Notify when the AI finishes responding (only when app is in background)</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notifications-enabled" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h2 class="section-title">Shortcut</h2>
+
+      <div class="setting-row">
+        <div class="setting-info">
+          <label>Quick launcher</label>
+          <p class="setting-description">Global shortcut to toggle the quick launcher</p>
+        </div>
+        <div class="shortcut-display" id="shortcut-display">
+          <kbd id="shortcut-key">Alt + Space</kbd>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-section">
+      <h2 class="section-title">About</h2>
+      <div class="setting-row about-row">
+        <div class="setting-info">
+          <p class="about-text">Le Chat Desktop <span id="app-version">v1.0.0</span></p>
+          <p class="setting-description">Mistral AI chat desktop wrapper with quick launcher</p>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script type="module" src="settings.js"></script>
+</body>
+</html>

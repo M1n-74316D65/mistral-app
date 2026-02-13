@@ -8,41 +8,55 @@
 </head>
 <body>
   <div class="launcher-container">
-    <div class="launcher-logo">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212.121 151.515" width="28" height="20">
-        <rect fill="#FCD34D" x="30.303" y="0" width="30.303" height="30.303"/>
-        <rect fill="#FCD34D" x="151.515" y="0" width="30.303" height="30.303"/>
-        <rect fill="#FBBF24" x="30.303" y="30.303" width="60.606" height="30.303"/>
-        <rect fill="#FBBF24" x="121.212" y="30.303" width="60.606" height="30.303"/>
-        <rect fill="#FB923C" x="30.303" y="60.606" width="151.515" height="30.303"/>
-        <rect fill="#F97316" x="30.303" y="90.909" width="30.303" height="30.303"/>
-        <rect fill="#F97316" x="90.909" y="90.909" width="30.303" height="30.303"/>
-        <rect fill="#F97316" x="151.515" y="90.909" width="30.303" height="30.303"/>
-        <rect fill="#B91C1C" x="0" y="121.212" width="90.909" height="30.303"/>
-        <rect fill="#B91C1C" x="121.212" y="121.212" width="90.909" height="30.303"/>
-      </svg>
+    <div class="launcher-row launcher-main-row">
+      <div class="launcher-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212.121 151.515" width="28" height="20">
+          <rect fill="#FCD34D" x="30.303" y="0" width="30.303" height="30.303"/>
+          <rect fill="#FCD34D" x="151.515" y="0" width="30.303" height="30.303"/>
+          <rect fill="#FBBF24" x="30.303" y="30.303" width="60.606" height="30.303"/>
+          <rect fill="#FBBF24" x="121.212" y="30.303" width="60.606" height="30.303"/>
+          <rect fill="#FB923C" x="30.303" y="60.606" width="151.515" height="30.303"/>
+          <rect fill="#F97316" x="30.303" y="90.909" width="30.303" height="30.303"/>
+          <rect fill="#F97316" x="90.909" y="90.909" width="30.303" height="30.303"/>
+          <rect fill="#F97316" x="151.515" y="90.909" width="30.303" height="30.303"/>
+          <rect fill="#B91C1C" x="0" y="121.212" width="90.909" height="30.303"/>
+          <rect fill="#B91C1C" x="121.212" y="121.212" width="90.909" height="30.303"/>
+        </svg>
+      </div>
+      <div class="launcher-divider"></div>
+      <div class="launcher-input-wrapper">
+        <input 
+          type="text" 
+          id="launcher-input" 
+          class="launcher-input" 
+          placeholder="Ask Le Chat anything..."
+          autofocus
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+      <button type="button" id="submit-btn" class="launcher-submit" aria-label="Send message">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m5 12 7-7 7 7"/>
+          <path d="M12 19V5"/>
+        </svg>
+      </button>
     </div>
-    <div class="launcher-divider"></div>
-    <div class="launcher-input-wrapper">
-      <input 
-        type="text" 
-        id="launcher-input" 
-        class="launcher-input" 
-        placeholder="Ask Le Chat anything..."
-        autofocus
-        autocomplete="off"
-        spellcheck="false"
-      />
+    <div class="launcher-row launcher-options-row">
+      <button type="button" id="new-chat-toggle" class="launcher-toggle active" aria-label="Toggle new chat" title="Start a new conversation (⌘N)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14"/>
+          <path d="M5 12h14"/>
+        </svg>
+        <span>New chat</span>
+      </button>
+      <div class="launcher-options-spacer"></div>
+      <div class="launcher-shortcut-hints">
+        <span class="launcher-shortcut-hint"><kbd class="mod-key">⌘</kbd><kbd>N</kbd> toggle</span>
+        <span class="launcher-shortcut-hint"><kbd>⏎</kbd> send</span>
+        <span class="launcher-shortcut-hint"><kbd>esc</kbd> dismiss</span>
+      </div>
     </div>
-    <div class="launcher-hint">
-      <kbd>↵</kbd> to send
-    </div>
-    <button type="button" id="submit-btn" class="launcher-submit" aria-label="Send message">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="m5 12 7-7 7 7"/>
-        <path d="M12 19V5"/>
-      </svg>
-    </button>
   </div>
   <script type="module" src="launcher.js"></script>
 </body>

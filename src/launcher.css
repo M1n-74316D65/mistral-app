@@ -62,11 +62,9 @@ body {
 
 .launcher-container {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 0 16px;
-  gap: 14px;
   background: var(--bg-primary);
   border-radius: 10px;
   overflow: hidden;
@@ -74,6 +72,36 @@ body {
     0 0 0 1px rgba(0, 0, 0, 0.06),
     0 8px 24px rgba(0, 0, 0, 0.12),
     0 2px 6px rgba(0, 0, 0, 0.08);
+  /* Entrance animation */
+  animation: launcherEntrance 0.15s ease-out;
+}
+
+@keyframes launcherEntrance {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.launcher-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 14px;
+}
+
+.launcher-main-row {
+  flex: 1;
+  min-height: 0;
+}
+
+.launcher-options-row {
+  padding: 0 16px 8px;
+  gap: 8px;
 }
 
 /* Logo section with subtle background */
@@ -112,6 +140,7 @@ body {
   display: flex;
   align-items: center;
   min-width: 0;
+  position: relative;
 }
 
 .launcher-input {
@@ -129,30 +158,11 @@ body {
 .launcher-input::placeholder {
   color: var(--text-secondary);
   font-weight: 400;
+  transition: color 0.15s ease;
 }
 
 .launcher-input:focus {
   outline: none;
-}
-
-/* Keyboard shortcut hint */
-.launcher-hint {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  letter-spacing: 0.02em;
-}
-
-.launcher-hint kbd {
-  font-family: inherit;
-  font-size: 11px;
 }
 
 /* Submit button with gradient */
@@ -194,4 +204,113 @@ body {
   width: 16px;
   height: 16px;
   stroke-width: 2.5;
+}
+
+/* New chat toggle button */
+.launcher-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1px solid var(--divider);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.launcher-toggle:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.launcher-toggle.active {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.launcher-toggle.active:hover {
+  background: rgba(255, 107, 53, 0.2);
+}
+
+.launcher-toggle svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+}
+
+.launcher-options-spacer {
+  flex: 1;
+}
+
+.launcher-shortcut-hints {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.launcher-container:focus-within .launcher-shortcut-hints {
+  opacity: 0.7;
+}
+
+.launcher-shortcut-hint {
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.launcher-shortcut-hint kbd {
+  font-family: inherit;
+  font-size: 10px;
+  padding: 1px 5px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  margin-right: 1px;
+}
+
+/* Error state - brief red flash on the container */
+.launcher-container.launcher-error {
+  animation: errorFlash 2.5s ease-out forwards;
+}
+
+.launcher-container.launcher-error .launcher-input {
+  color: #ef4444;
+}
+
+.launcher-container.launcher-error .launcher-input::placeholder {
+  color: #ef4444;
+}
+
+@keyframes errorFlash {
+  0% { box-shadow: 0 0 0 2px #ef4444, 0 8px 24px rgba(239, 68, 68, 0.3); }
+  70% { box-shadow: 0 0 0 2px #ef4444, 0 8px 24px rgba(239, 68, 68, 0.15); }
+  100% { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.12); }
+}
+
+@media (prefers-color-scheme: dark) {
+  @keyframes errorFlash {
+    0% { box-shadow: 0 0 0 2px #ef4444, 0 8px 24px rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 2px #ef4444, 0 8px 24px rgba(239, 68, 68, 0.2); }
+    100% { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 24px rgba(0, 0, 0, 0.4); }
+  }
+}
+
+/* Submitting state - subtle pulse on submit button */
+.launcher-submit.launcher-submitting {
+  opacity: 0.6;
+  cursor: wait;
+  animation: submitPulse 1s ease-in-out infinite;
+}
+
+@keyframes submitPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
 }
