@@ -4,7 +4,7 @@
   box-sizing: border-box;
 }
 
-:root {
+:root, html.light {
   --bg-primary: #ffffff;
   --bg-secondary: #f5f5f5;
   --bg-tertiary: #ebebeb;
@@ -18,7 +18,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --bg-primary: #1c1c1e;
     --bg-secondary: #2c2c2e;
     --bg-tertiary: #3a3a3c;
@@ -30,6 +30,19 @@
     --toggle-bg: #48484a;
     --toggle-active: #ff6b35;
   }
+}
+
+html.dark {
+  --bg-primary: #1c1c1e;
+  --bg-secondary: #2c2c2e;
+  --bg-tertiary: #3a3a3c;
+  --text-primary: #f5f5f7;
+  --text-secondary: #8e8e93;
+  --accent: #ff6b35;
+  --accent-hover: #ff8c5a;
+  --border: rgba(255, 255, 255, 0.08);
+  --toggle-bg: #48484a;
+  --toggle-active: #ff6b35;
 }
 
 html, body {
@@ -165,6 +178,34 @@ html, body {
   font-weight: 500;
   color: var(--text-primary);
   letter-spacing: 0.02em;
+}
+
+/* Action Button */
+.action-btn {
+  padding: 6px 14px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.action-btn:hover {
+  background: var(--toggle-bg);
+}
+
+.action-btn:active {
+  transform: scale(0.96);
+}
+
+.action-btn.success {
+  color: #10b981;
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
 }
 
 /* About section */

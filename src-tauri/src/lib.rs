@@ -19,21 +19,28 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut,
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 struct AppSettings {
+    #[serde(default = "default_true")]
     new_chat_default: bool,
+    #[serde(default = "default_true")]
     notifications_enabled: bool,
+    #[serde(default)]
+    theme: Option<String>,
 }
+
+fn default_true() -> bool { true }
 
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
             new_chat_default: true,
             notifications_enabled: true,
+            theme: None,
         }
     }
 }
 
-// JavaScript to inject custom styles that hide UI elements overlapping with title bar
-fn get_hide_titlebar_overlap_js() -> String {
+// JavaScript to inject custom styles that hide the workspace button
+fn get_hide_workspace_button_js() -> String {
     r#"
     (function() {
         const STYLE_ID = 'le-chat-custom-styles';
@@ -45,12 +52,20 @@ fn get_hide_titlebar_overlap_js() -> String {
             const style = document.createElement('style');
             style.id = STYLE_ID;
             style.textContent = `
-                /* Hide the workspace menu button that overlaps title bar */
-                div[data-sidebar="header"] button[aria-haspopup="menu"] {
+                /* Hide the workspace menu button by targeting its unique inner logo container */
+                button[aria-haspopup="menu"]:has(.bg-state-brand) {
                     display: none !important;
                 }
                 
-                /* Hide the flex-1 wrapper containing the workspace button */
+                /* Hide the wrapper containing the workspace button */
+                div:has(> button[aria-haspopup="menu"]:has(.bg-state-brand)) {
+                    display: none !important;
+                }
+                
+                /* Also attempt to target via sidebar header attribute to be safe */
+                div[data-sidebar="header"] button[aria-haspopup="menu"]:has(svg.lucide-chevron-down) {
+                    display: none !important;
+                }
                 div[data-sidebar="header"] .flex-1:has(button[aria-haspopup="menu"]) {
                     display: none !important;
                 }
@@ -60,21 +75,16 @@ fn get_hide_titlebar_overlap_js() -> String {
                     width: 100% !important;
                     justify-content: flex-end !important;
                 }
-                
-                /* Add top padding to sidebar header to clear macOS traffic lights */
-                div[data-sidebar="header"] {
-                    padding-top: 2.5rem !important;
-                }
             `;
             document.head.appendChild(style);
             
             // Fallback for browsers without :has() support
-            document.querySelectorAll('div[data-sidebar="header"] button[aria-haspopup="menu"]').forEach(btn => {
-                btn.style.display = 'none';
-                // Also hide the flex-1 wrapper parent
-                const wrapper = btn.closest('.flex-1');
-                if (wrapper) {
-                    wrapper.style.display = 'none';
+            document.querySelectorAll('button[aria-haspopup="menu"]').forEach(btn => {
+                if (btn.querySelector('.bg-state-brand')) {
+                    btn.style.display = 'none';
+                    if (btn.parentElement) {
+                        btn.parentElement.style.display = 'none';
+                    }
                 }
             });
             
@@ -242,6 +252,62 @@ fn get_inject_message_js(message: &str) -> String {
     "#,
         escaped_message
     )
+}
+
+// JavaScript to observe theme changes (dark/light) on the Mistral web app
+// Emits 'theme-changed' Tauri event so other windows can sync their styles
+fn get_theme_watcher_js() -> String {
+    r#"
+    (function() {
+        if (window.__leChatThemeWatcher) return;
+        window.__leChatThemeWatcher = true;
+        
+        function emitTheme() {
+            if (!window.__TAURI__) return;
+            const isDark = document.documentElement.classList.contains('dark');
+            const theme = isDark ? 'dark' : 'light';
+            window.__TAURI__.event.emit('theme-changed', { theme });
+        }
+        
+        // Initial emit
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', emitTheme);
+        } else {
+            emitTheme();
+        }
+        
+        // Watch for changes on the HTML element's class attribute
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.attributeName === 'class') {
+                    emitTheme();
+                }
+            }
+        });
+        
+        observer.observe(document.documentElement, { attributes: true });
+    })();
+    "#
+    .to_string()
+}
+
+#[cfg(target_os = "macos")]
+fn get_macos_titlebar_padding_js() -> String {
+    r#"
+    (function() {
+        const STYLE_ID = 'le-chat-macos-padding';
+        if (document.getElementById(STYLE_ID)) return;
+        const style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.textContent = `
+            /* Add top padding to sidebar header to clear macOS traffic lights */
+            div[data-sidebar="header"] {
+                padding-top: 2.5rem !important;
+            }
+        `;
+        document.head.appendChild(style);
+    })();
+    "#.to_string()
 }
 
 #[tauri::command]
@@ -412,6 +478,16 @@ async fn submit_message(app: AppHandle, message: String, new_chat: bool) -> Resu
 }
 
 #[tauri::command]
+async fn resize_launcher(app: AppHandle, height: f64) -> Result<(), String> {
+    if let Some(launcher) = app.get_webview_window("launcher") {
+        // The default width is 660
+        let size = tauri::Size::Logical(tauri::LogicalSize { width: 660.0, height });
+        launcher.set_size(size).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 async fn get_settings(app: AppHandle) -> Result<AppSettings, String> {
     use tauri_plugin_store::StoreExt;
     let store = app.store("settings.json").map_err(|e| e.to_string())?;
@@ -566,6 +642,7 @@ pub fn run() {
             submit_message,
             navigate_to_chat,
             navigate_to_offline,
+            resize_launcher,
             get_settings,
             save_settings,
             show_settings,
@@ -590,6 +667,29 @@ pub fn run() {
                         api.prevent_close();
                         if let Some(window) = app_handle.get_webview_window("main") {
                             let _ = window.hide();
+                        }
+                    }
+                });
+            }
+
+            // Listen for theme-changed to save it to settings
+            {
+                let app_handle = app.handle().clone();
+                app.listen("theme-changed", move |event| {
+                    if let Ok(payload) = serde_json::from_str::<serde_json::Value>(event.payload()) {
+                        if let Some(theme) = payload.get("theme").and_then(|t| t.as_str()) {
+                            use tauri_plugin_store::StoreExt;
+                            if let Ok(store) = app_handle.store("settings.json") {
+                                let mut settings = match store.get("app_settings") {
+                                    Some(value) => serde_json::from_value::<AppSettings>(value).unwrap_or_default(),
+                                    None => AppSettings::default(),
+                                };
+                                settings.theme = Some(theme.to_string());
+                                if let Ok(value) = serde_json::to_value(&settings) {
+                                    store.set("app_settings", value);
+                                    let _ = store.save();
+                                }
+                            }
                         }
                     }
                 });
@@ -764,6 +864,27 @@ pub fn run() {
                     })();
                 "#;
                 let _ = main_window.eval(connectivity_js);
+                
+                // Inject theme watcher to sync dark/light mode from Mistral
+                let theme_js = get_theme_watcher_js();
+                let _ = main_window.eval(&theme_js);
+                
+                // Keep watching theme on page navigation (since it's an SPA, 
+                // the document element might persist, but if there's a hard reload we need to re-inject)
+                let app_handle = app.handle().clone();
+                main_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::Focused(true) = event {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let _ = window.eval(&get_theme_watcher_js());
+                            
+                            #[cfg(target_os = "macos")]
+                            {
+                                let _ = window.eval(&get_macos_titlebar_padding_js());
+                            }
+                            let _ = window.eval(&get_hide_workspace_button_js());
+                        }
+                    }
+                });
             }
 
             // Platform-specific window configuration and style injection
@@ -772,11 +893,12 @@ pub fn run() {
                 {
                     // macOS: Use overlay title bar style with hidden title
                     let _ = main_window.set_title_bar_style(TitleBarStyle::Overlay);
-                    // Inject CSS to hide UI elements overlapping with traffic lights
-                    let js = get_hide_titlebar_overlap_js();
-                    let _ = main_window.eval(&js);
+                    // Inject padding to clear macOS traffic lights
+                    let _ = main_window.eval(&get_macos_titlebar_padding_js());
                 }
-
+                
+                // Hide the workspace menu button on all platforms
+                let _ = main_window.eval(&get_hide_workspace_button_js());
 
             }
 
@@ -815,11 +937,13 @@ mod tests {
         let settings = AppSettings {
             new_chat_default: false,
             notifications_enabled: true,
+            theme: Some("dark".to_string()),
         };
         let json = serde_json::to_value(&settings).unwrap();
         let deserialized: AppSettings = serde_json::from_value(json).unwrap();
         assert_eq!(deserialized.new_chat_default, false);
         assert_eq!(deserialized.notifications_enabled, true);
+        assert_eq!(deserialized.theme, Some("dark".to_string()));
     }
 
     #[test]
@@ -827,12 +951,14 @@ mod tests {
         // Simulate a stored JSON that's missing a field (e.g., after adding a new setting)
         let json = serde_json::json!({ "new_chat_default": false });
         let result: Result<AppSettings, _> = serde_json::from_value(json);
-        // Strict deserialization will fail — this is expected since we don't use
-        // #[serde(default)]. This test documents the current behavior.
         assert!(
-            result.is_err(),
-            "Missing fields should fail without #[serde(default)]"
+            result.is_ok(),
+            "Missing fields should succeed with #[serde(default)]"
         );
+        let settings = result.unwrap();
+        assert_eq!(settings.new_chat_default, false);
+        assert_eq!(settings.notifications_enabled, true); // from default_true
+        assert_eq!(settings.theme, None); // from default
     }
 
     #[test]
@@ -894,8 +1020,8 @@ mod tests {
     }
 
     #[test]
-    fn test_hide_titlebar_overlap_js_is_valid() {
-        let js = get_hide_titlebar_overlap_js();
+    fn test_hide_workspace_button_js_is_valid() {
+        let js = get_hide_workspace_button_js();
         assert!(!js.is_empty());
         assert!(js.contains("le-chat-custom-styles"));
         assert!(js.contains("data-sidebar"));

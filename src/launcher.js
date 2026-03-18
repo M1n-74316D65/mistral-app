@@ -18,6 +18,11 @@ class LauncherApp {
     // Constants
     this.MAX_MESSAGE_LENGTH = 5000;
     
+    // History
+    this.history = JSON.parse(localStorage.getItem('launcher_history') || '[]');
+    this.historyIndex = -1;
+    this.currentDraft = '';
+    
     // Validate elements
     if (!this.input || !this.submitBtn) {
       console.error('Critical UI elements not found. Launcher cannot initialize.');
@@ -55,6 +60,9 @@ class LauncherApp {
     // Keyboard events
     document.addEventListener('keydown', (e) => this.handleKeyDown(e), { passive: false });
     
+    // Auto-resize textarea
+    this.input.addEventListener('input', () => this.autoResizeInput());
+    
     // Submit button
     this.submitBtn.addEventListener('click', () => this.submitMessage());
     
@@ -78,6 +86,7 @@ class LauncherApp {
     listen('launcher-shown', () => {
       if (this.input) {
         this.input.value = '';
+        this.autoResizeInput();
         this.input.focus();
       }
       // Re-load setting in case it was changed
@@ -89,19 +98,34 @@ class LauncherApp {
     // Listen for settings-changed event
     listen('settings-changed', (event) => {
       const settings = event.payload;
-      if (settings && typeof settings.new_chat_default === 'boolean') {
-        this.newChatMode = settings.new_chat_default;
-        if (this.newChatToggle) {
-          this.newChatToggle.classList.toggle('active', this.newChatMode);
+      if (settings) {
+        if (typeof settings.new_chat_default === 'boolean') {
+          this.newChatMode = settings.new_chat_default;
+          if (this.newChatToggle) {
+            this.newChatToggle.classList.toggle('active', this.newChatMode);
+          }
+          if (this.input) {
+            this.input.placeholder = this.newChatMode
+              ? 'Ask Le Chat anything...'
+              : 'Continue current chat...';
+          }
         }
-        if (this.input) {
-          this.input.placeholder = this.newChatMode
-            ? 'Ask Le Chat anything...'
-            : 'Continue current chat...';
+        if (settings.theme) {
+          this.applyTheme(settings.theme);
         }
       }
     }).catch(error => {
       console.error('Failed to listen for settings-changed event:', error);
+    });
+
+    // Listen for theme-changed event from the main window directly
+    listen('theme-changed', (event) => {
+      const { theme } = event.payload || {};
+      if (theme) {
+        this.applyTheme(theme);
+      }
+    }).catch(error => {
+      console.error('Failed to listen for theme-changed event:', error);
     });
     
     // Listen for inject-result from the main window's injected JS
@@ -148,9 +172,22 @@ class LauncherApp {
     }, 2500);
   }
 
+  applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else if (theme === 'light') {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }
+
   async loadNewChatDefault() {
     try {
       const settings = await invoke('get_settings');
+      if (settings.theme) {
+        this.applyTheme(settings.theme);
+      }
       this.newChatMode = settings.new_chat_default ?? true;
       if (this.newChatToggle) {
         this.newChatToggle.classList.toggle('active', this.newChatMode);
@@ -196,6 +233,19 @@ class LauncherApp {
         this.submitMessage();
         return;
       }
+
+      // History navigation
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.navigateHistory(1);
+        return;
+      }
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this.navigateHistory(-1);
+        return;
+      }
     } catch (error) {
       console.error('Error handling keyboard event:', error);
     }
@@ -222,6 +272,75 @@ class LauncherApp {
     if (this.focusTimeout) {
       clearTimeout(this.focusTimeout);
     }
+  }
+
+  async autoResizeInput() {
+    if (!this.input) return;
+
+    // Reset height to calculate true scrollHeight
+    this.input.style.height = 'auto';
+    
+    // Max height for the textarea (about 5 lines)
+    const maxHeight = 120;
+    const paddingOffset = 4; // slight offset for borders/padding
+
+    let newHeight = this.input.scrollHeight;
+    if (newHeight > maxHeight) {
+      newHeight = maxHeight;
+      this.input.style.overflowY = 'auto';
+    } else {
+      this.input.style.overflowY = 'hidden';
+    }
+
+    this.input.style.height = newHeight + 'px';
+
+    // Adjust Tauri window height (default base height is 88)
+    // The base input height is roughly 24px.
+    try {
+      const baseWindowHeight = 88;
+      const baseInputHeight = 24;
+      const extraHeight = Math.max(0, newHeight - baseInputHeight);
+      
+      invoke('resize_launcher', { height: baseWindowHeight + extraHeight }).catch(e => {
+        console.warn("Could not resize window", e);
+      });
+    } catch (e) {
+      console.warn("Error invoking resize_launcher", e);
+    }
+  }
+
+  navigateHistory(direction) {
+    if (!this.history || this.history.length === 0) return;
+
+    // Save current draft if we're starting to navigate
+    if (this.historyIndex === -1 && direction === 1) {
+      this.currentDraft = this.input.value;
+    }
+
+    this.historyIndex += direction;
+
+    // Bounds checking
+    if (this.historyIndex >= this.history.length) {
+      this.historyIndex = this.history.length - 1;
+    } else if (this.historyIndex < -1) {
+      this.historyIndex = -1;
+    }
+
+    // Apply value
+    if (this.historyIndex === -1) {
+      this.input.value = this.currentDraft;
+    } else {
+      this.input.value = this.history[this.historyIndex];
+    }
+    
+    this.autoResizeInput();
+
+    // Move cursor to end
+    setTimeout(() => {
+      if (this.input) {
+        this.input.selectionStart = this.input.selectionEnd = this.input.value.length;
+      }
+    }, 0);
   }
   
   toggleNewChat() {
@@ -277,6 +396,8 @@ class LauncherApp {
       
       // Clear input only after successful validation
       this.input.value = '';
+      this.currentDraft = '';
+      this.autoResizeInput();
       
       // Send message to Rust backend with timeout
       const newChat = this.newChatMode;
@@ -289,12 +410,22 @@ class LauncherApp {
       
       await Promise.race([submitPromise, timeoutPromise]);
       
+      // Update history
+      if (message && this.history[0] !== message) {
+        this.history.unshift(message);
+        if (this.history.length > 50) this.history.pop();
+        localStorage.setItem('launcher_history', JSON.stringify(this.history));
+      }
+      this.historyIndex = -1;
+      this.currentDraft = '';
+      
     } catch (error) {
       console.error('Failed to submit message:', error);
       
       // Restore message on error
       if (this.input && originalMessage) {
         this.input.value = originalMessage;
+        this.autoResizeInput();
       }
       
       if (error.message === 'Submit message timeout') {
